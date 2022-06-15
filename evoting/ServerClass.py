@@ -52,7 +52,8 @@ class Server:
         #expired = self.token_table[index]["expired"]
         db = DbAdapter(self.db_ip, self.db_port)
         expired, name = db.get_token(index)
-        if name == None: # get_token() might return empty result
+        ################## Fault Found!! by test_create_election_invalid_auth_token() ##################
+        if name == None:
             return False
         else:
             return datetime.now()<expired
@@ -134,6 +135,8 @@ class Server:
 
     def isRepeated_vote(self, index, voter):
         election = self.get_election(index)
+        # print("voters are " + election["voters"])
+        # print(election)
         return voter in election["voters"]
 
     def isValid_group(self, index, group):
@@ -190,143 +193,3 @@ class Server:
 
         except:
             return eVoting_pb2.Status(code=2) # Status.code=2 : Undefined error
-
-
-
-############################ RPC API ############################
-class eVotingServicer(eVoting_pb2_grpc.eVotingServicer):
-
-    def __init__(self, db_port):
-        self.server = Server('localhost', db_port)  # handling internal state
-        with open("public_key", "rb") as f:
-            public_key_byte = f.read()
-        self.server.RegisterVoter(eVoting_pb2.Voter(name="Frog", group="A", public_key=public_key_byte))
-
-    def RegisterVoter(self, voter: eVoting_pb2.Voter):
-        self.server.RegisterVoter(voter)
-
-    def UnregisterVoter(self, votername: eVoting_pb2.VoterName):
-        self.server.UnregisterVoter(votername)
-
-    # Define every RPC call down below
-    def PreAuth(self, request, context):
-        print("Received PreAuth RPC call...")
-        voterName = request
-        key = voterName.name
-        challenge = secrets.token_bytes(CHALLENGE_SIZE)
-        self.server.add_challenge(key, challenge)
-        return eVoting_pb2.Challenge(value = bytes(challenge))
-
-    def Auth(self, request, context):
-        authRequest = request
-        index = authRequest.name.name
-        public_key = self.server.get_register_publicKey(index)
-        challenge = self.server.get_challenge(index)
-        signature = authRequest.response.value
-        try:
-            public_key.verify(smessage=challenge, signature=signature) 
-        except: # In case of invalid signature
-            return eVoting_pb2.AuthToken(value = bytes("invalid", encoding="utf-8"))
-        token = secrets.token_bytes(TOKEN_SIZE)
-        self.server.add_token(token, index) # token is the index here
-        return eVoting_pb2.AuthToken(value = bytes(token))
-
-    def CreateElection(self, request, context):
-        print("Received CreateElection RPC call...")
-        election = request
-        token = election.token.value
-        try:
-            if not self.server.isValid_token(token):
-                return eVoting_pb2.Status(code = 1) # Status.code=1 : Invalid authentication token
-
-            if len(election.choices)==0 or len(election.groups)==0:
-                return eVoting_pb2.Status(code = 2) # Status.code=2 : Missing groups or choices specification (at least one group and one choice should be listed for the election)
-
-            self.server.add_election(election)
-
-            return eVoting_pb2.Status(code = 0) # Status.code=0 : Election created successfully
-        except:
-            return eVoting_pb2.Status(code = 3) # Status.code=3 : Unknown error
-
-    def CastVote(self, request, context):
-        print("Received CastVote RPC call...")
-        vote = request
-        index = vote.election_name
-        token = vote.token.value
-        try:
-            if not self.server.isValid_token(token):
-                return eVoting_pb2.Status(code = 1) # Status.code=1 : Invalid authentication token
-
-            
-            if not self.server.isExisted_election(index) or self.server.isDue_election(index):
-                return eVoting_pb2.Status(code = 2) # Status.code=2 : Invalid election name
-            
-            name = self.server.get_name_by_token(token)
-            register = self.server.get_register(name)
-            group = register["group"]
-
-            if not self.server.isValid_group(index, group):
-                return eVoting_pb2.Status(code = 3) # Status.code=3 : The voter’s group is not allowed in the election
-            
-            if self.server.isRepeated_vote(index, name):
-                return eVoting_pb2.Status(code = 4) # Status.code=4 : A previous vote has been cast.
-            
-            self.server.add_vote(index, vote.choice_name, name)
-
-            return eVoting_pb2.Status(code = 0) # Status.code=0 : Successful vote
-        except:
-            return eVoting_pb2.Status(code = 5) # Status.code=5 : Unknown error.
-
-    def GetResult(self, request, context):
-        print("Received GetResult RPC call...")
-        electionName = request
-        index = electionName.name
-
-        result = eVoting_pb2.ElectionResult()
-        
-
-        if not self.server.isExisted_election(index):
-            result.status = 1
-            return result # ElectionResult.status = 1: Non-existent election
-        if not self.server.isDue_election(index):
-            result.status = 2
-            return result # ElectionResult.status = 2: The election is still ongoing. Election result is not available yet.
-
-        result = eVoting_pb2.ElectionResult()
-        result.status = 0
-        votes = self.server.get_finalized_votes(index) 
-        for choice, ballots in votes.items():
-            theCount = result.counts.add()
-            theCount.choice_name = choice
-            theCount.count = ballots
-
-        return result # ElectionReuslt.status = 0
-    
-
-#################################################################
-
-#################################################################
-
-def signal_handler(sig, frame):
-    print('Server terminated.')
-    sys.exit(0)
-
-def serve(grpc_port, db_port):
-    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-    eVoting_pb2_grpc.add_eVotingServicer_to_server(eVotingServicer(db_port), server)
-    server.add_insecure_port('[::]:{}'.format(grpc_port))
-    server.start()
-    print("Server listening on port {}...".format(grpc_port))
-    server.wait_for_termination()
-
-
-if __name__ == '__main__':
-    if len(sys.argv)!=3:
-        print('need grpc server port and db server port')
-        sys.exit()
-    
-    grpc_port = sys.argv[1]
-    db_port = sys.argv[2]
-    logging.basicConfig()
-    signal.signal(signal.SIGINT, signal_handler)
-    serve(grpc_port, db_port)
