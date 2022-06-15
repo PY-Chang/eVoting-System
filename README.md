@@ -20,7 +20,7 @@ class eVotingServicer {
 ```
 
 ## Testing Targets
-### `class Server()`: 19 methods
+### class `Server()`: 19 methods
 ```java
 class Server {
     add_token(self, index, name);
@@ -45,7 +45,7 @@ class Server {
 }
 ```
 
-### `class eVotingServicer()`: 5 user callable RPC calls
+### class `eVotingServicer()`: 5 user callable RPC calls
 ```java
 class eVotingServicer {
     rpc PreAuth (VoterName) returns (Challenge);
@@ -56,7 +56,7 @@ class eVotingServicer {
 }
 ```
 
-### `class DbAdapter()`: 12 methods 
+### class `DbAdapter()`: 12 methods 
 ```java
 class DbAdapter {
     add_register(self, name, group, public_key)
@@ -80,8 +80,8 @@ Since the project is written in python,  I use **pytest** to do unit testing and
 ### Unit Test
 > Line Coverage & Predicate Coverage  
 
-* `class Server()`
-* `class DbAdapter()`
+* class `Server()`
+* class `DbAdapter()`
 
 ### End-to-End Test
 > Testing all user callable gRPC APIs, and try to test every possible responses(predefined) from the server.
@@ -108,18 +108,18 @@ Since the project is written in python,  I use **pytest** to do unit testing and
 
 
 ## Test Codes  
-* [Test for `class Server()`](https://github.com/PY-Chang/eVoting-System/blob/755e8ba8e2f9808209a2fb47bcc88998f2776991/evoting/server_test.py)
-* [Test for `class DbAdapter()`](https://github.com/PY-Chang/eVoting-System/blob/755e8ba8e2f9808209a2fb47bcc88998f2776991/evoting/testDB.py)
+* [Test for class `Server()`](https://github.com/PY-Chang/eVoting-System/blob/755e8ba8e2f9808209a2fb47bcc88998f2776991/evoting/server_test.py)
+* [Test for class `DbAdapter()`](https://github.com/PY-Chang/eVoting-System/blob/755e8ba8e2f9808209a2fb47bcc88998f2776991/evoting/testDB.py)
 * [End-to-End Tests](https://github.com/PY-Chang/eVoting-System/blob/755e8ba8e2f9808209a2fb47bcc88998f2776991/evoting/test_gRPC_API.py)
 
 
 ## Testing Results
-### `class Server()`
+### class `Server()`
 * **23** tests in total
 * Line coverage: **98%**
 ![server test](https://imgur.com/MgjFfUu.png)
 
-### `class DbAdapter()`
+### class `DbAdapter()`
 * **21** tests in total
 * Line coverage: **100%**
 ![DB test](https://imgur.com/08YueS2.png)
@@ -132,11 +132,11 @@ Since the project is written in python,  I use **pytest** to do unit testing and
 ## Faults Found
 > All the bugs are found during end-to-end testing and had already been patched (referring to GitHub commit history listed down below).  
 
-### `class Server()`
+### class `Server()`
 * `isValid_token(self, index)`: [Link](https://github.com/PY-Chang/eVoting-System/commit/755e8ba8e2f9808209a2fb47bcc88998f2776991#r76136850)
 * `isValid_group()`: [Link](https://github.com/PY-Chang/eVoting-System/commit/755e8ba8e2f9808209a2fb47bcc88998f2776991#r76136922)
 
-### `class DbAdapter()`
+### class `DbAdapter()`
 * `add_election()`: [Link](https://github.com/PY-Chang/eVoting-System/commit/755e8ba8e2f9808209a2fb47bcc88998f2776991#r76136997)
 
 
@@ -160,6 +160,6 @@ Since the project is written in python,  I use **pytest** to do unit testing and
 
 ## How to run tests
 > The system must be started before testing.
-* Test for `class Server()`: `make server_test`
-* Test for `class DbAdapter()`: `make detail_test`
+* Test for class `Server()`: `make server_test`
+* Test for class `DbAdapter()`: `make detail_test`
 * End-to-End Test: `make api_test`
