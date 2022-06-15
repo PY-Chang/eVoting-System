@@ -107,9 +107,9 @@ Since the project is written in python,  I use **pytest** to do unit testing and
   * ElectionResult.status = 2: The election is still ongoing. Election result is not available yet.
 
 
-## Test Codes  
-* [Test for class `Server()`](https://github.com/PY-Chang/eVoting-System/blob/755e8ba8e2f9808209a2fb47bcc88998f2776991/evoting/server_test.py)
-* [Test for class `DbAdapter()`](https://github.com/PY-Chang/eVoting-System/blob/755e8ba8e2f9808209a2fb47bcc88998f2776991/evoting/testDB.py)
+## Test Cases  
+* [Tests for class `Server()`](https://github.com/PY-Chang/eVoting-System/blob/755e8ba8e2f9808209a2fb47bcc88998f2776991/evoting/server_test.py)
+* [Tests for class `DbAdapter()`](https://github.com/PY-Chang/eVoting-System/blob/755e8ba8e2f9808209a2fb47bcc88998f2776991/evoting/testDB.py)
 * [End-to-End Tests](https://github.com/PY-Chang/eVoting-System/blob/755e8ba8e2f9808209a2fb47bcc88998f2776991/evoting/test_gRPC_API.py)
 
 
@@ -147,16 +147,18 @@ Since the project is written in python,  I use **pytest** to do unit testing and
 1. `git checkout Software-Testing`
 2. `cd rqlite-v7.3.2-linux-amd64/`
 3. `./rqlited -node-id 1 node.1`
-4. `cd ../evoting`
-5. `python3 server.py 50003 4001`
-6. open another shell
-7. `cd rqlite-v7.3.2-linux-amd64/`
-8. `./rqlited -node-id 2 -http-addr localhost:4003 -raft-addr localhost:4004 -join http://localhost:4001 node.2`
-9. `cd ../evoting`
-10. `python3 server.py 50002 4003`
-11. open another shell again
-12. `cd evoting`
-13. `python3 manager.py`
+4. open another shell
+5. `cd evoting`
+6. `python3 server.py 50003 4001`
+7. open another shell
+8. `cd rqlite-v7.3.2-linux-amd64/`
+9. `./rqlited -node-id 2 -http-addr localhost:4003 -raft-addr localhost:4004 -join http://localhost:4001 node.2`
+10. open another shell
+11. `cd evoting`
+12. `python3 server.py 50002 4003`
+13. open another shell again
+14. `cd evoting`
+15. `python3 manager.py`
 
 ## How to run tests
 > The system must be started before testing.
